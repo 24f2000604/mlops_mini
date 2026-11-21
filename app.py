@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import json
+import logging
 import os
+import sys
 
 import mlflow
 import pandas as pd
@@ -21,6 +24,28 @@ FEATURE_COLUMNS = [
     "breed_mix",
     "village_cluster",
 ]
+
+
+class JsonFormatter(logging.Formatter):
+    def format(self, record: logging.LogRecord) -> str:
+        payload = {
+            "time": self.formatTime(record, "%Y-%m-%dT%H:%M:%S"),
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+        }
+        extra = getattr(record, "extra_fields", None)
+        if isinstance(extra, dict):
+            payload.update(extra)
+        return json.dumps(payload)
+
+
+_handler = logging.StreamHandler(sys.stdout)
+_handler.setFormatter(JsonFormatter())
+logger = logging.getLogger("mp168")
+logger.setLevel(logging.INFO)
+logger.handlers = [_handler]
+logger.propagate = False
 
 mlflow.set_tracking_uri(TRACKING_URI)
 
@@ -87,6 +112,19 @@ def predict(payload: PredictRequest) -> PredictResponse:
 
     row = pd.DataFrame([payload.model_dump()], columns=FEATURE_COLUMNS)
     prediction = float(model.predict(row)[0])
+
+    logger.info(
+        "prediction",
+        extra={
+            "extra_fields": {
+                "event": "prediction",
+                "prediction": prediction,
+                "village_cluster": payload.village_cluster,
+                "breed_mix": payload.breed_mix,
+            }
+        },
+    )
+
     return PredictResponse(prediction=prediction)
 
 
