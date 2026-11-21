@@ -7,7 +7,16 @@ authors = [
     { name = "24f2000604", email = "bhomia.sarthak@gmail.com" }
 ]
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "docker>=7.2.0",
+    "fastapi>=0.165.0",
+    "mlflow>=3.18.0",
+    "notebook>=7.6.5",
+    "numpy>=2.5.5",
+    "pandas>=3.1.1",
+    "scikit-learn>=1.9.1",
+    "tabulate>=0.10.0",
+]
 
 [project.scripts]
 mlops-mini = "mlops_mini:main"
