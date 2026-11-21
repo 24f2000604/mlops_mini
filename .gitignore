@@ -2,7 +2,6 @@
 __pycache__/
 .pytest_cache/
 *.pyc
-mlflow.db
 mlruns/
 drift_report.*
 data/current.csv

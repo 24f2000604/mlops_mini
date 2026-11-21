@@ -58,10 +58,12 @@ MODEL_NAME = "trees"
 trees = ["tree", "tree_2", "tree_3"]
 
 best_mae = float("inf")
-best_version = None
-best_model_name = ""
+best_model_uri = None
+best_run_id = None
+best_variant = ""
 
-for tree in trees:
+
+def build_pipeline(variant):
     num_pipeline = Pipeline(steps=[("scaler", StandardScaler())])
     cat_pipeline = Pipeline(steps=[("encoder", OneHotEncoder(handle_unknown="ignore"))])
     preprocessor = ColumnTransformer(
@@ -69,12 +71,15 @@ for tree in trees:
         remainder="drop",
     )
     tree_model = DecisionTreeRegressor(
-        **params["models"][tree],
+        **params["models"][variant],
         random_state=params["models"]["SEED"],
     )
-    pipeline = Pipeline(steps=[("preprocessor", preprocessor), ("model", tree_model)])
+    return Pipeline(steps=[("preprocessor", preprocessor), ("model", tree_model)])
 
-    with mlflow.start_run(run_name=f"v1_{tree}"):
+
+for tree in trees:
+    pipeline = build_pipeline(tree)
+    with mlflow.start_run(run_name=f"v1_{tree}") as run:
         pipeline.fit(X_train, y_train)
         preds = pipeline.predict(X_test)
         mae = float(mean_absolute_error(y_test, preds))
@@ -86,27 +91,27 @@ for tree in trees:
 
         model_info = mlflow.sklearn.log_model(
             sk_model=pipeline,
-            artifact_path="model",
-            registered_model_name=MODEL_NAME,
+            name="model",
             serialization_format="cloudpickle",
         )
 
-        version = str(model_info.registered_model_version)
-        print(f"[{tree}] Registered {MODEL_NAME} v{version} | MAE: {mae:.4f}")
+        print(f"[{tree}] run {run.info.run_id} | MAE: {mae:.4f}")
 
         if mae < best_mae:
             best_mae = mae
-            best_version = version
-            best_model_name = tree
+            best_model_uri = model_info.model_uri
+            best_run_id = run.info.run_id
+            best_variant = tree
 
-if best_version is not None:
-    client = MlflowClient()
-    client.set_registered_model_alias(
-        name=MODEL_NAME,
-        alias="champion",
-        version=best_version,
-    )
-    print(
-        f"\nWinner: {best_model_name} (v{best_version}) -> "
-        f"Aliased as @champion with MAE: {best_mae:.4f}"
-    )
+client = MlflowClient()
+registered = mlflow.register_model(model_uri=best_model_uri, name=MODEL_NAME)
+client.set_registered_model_alias(
+    name=MODEL_NAME,
+    alias="champion",
+    version=registered.version,
+)
+
+print(
+    f"\nv1 winner: {best_variant} (run {best_run_id}) -> "
+    f"trees v{registered.version} @champion | MAE: {best_mae:.4f}"
+)

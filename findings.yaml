@@ -38,25 +38,25 @@ data_issues:
     true_levels: null # how many real categories there are after cleaning
 
 tracking:
-  experiment_name: null
-  best_run_id: null # the MLflow run id of your v1 model
-  registered_model_name: null
-  champion_version: null
+  experiment_name: "exp_1"
+  best_run_id: "c495a7c20b884cf9a3c9aea9d83b0bda" # the MLflow run id of your v1 model
+  registered_model_name: "trees"
+  champion_version: 2
 
 monitoring:
   psi: # cleaned train.csv vs later.csv, 10 bins
-    cows: null
-    buffaloes: null
-    fodder_price_rs: null
-    temp_c: null
-    vet_visits: null
-    feed_kg: null
-  most_drifted_feature: null
+    cows: 6.8465
+    buffaloes: 0.0442
+    fodder_price_rs: 0.0768
+    temp_c: 0.0413
+    vet_visits: 0.0512
+    feed_kg: 0.0241
+  most_drifted_feature: "cows"
   mae_by_group: # v1 on later.csv, per value of village_cluster
-    "Cluster A": null
-    "Cluster B": null
-    "Cluster C": null
-  worst_served_group: null
-  mae_v1_on_check: null # v1 on the last 30% of later.csv (by date)
-  mae_v2_on_check: null # v2 on the same rows
-  decision: null # promote or keep
+    "Cluster A": 549.78
+    "Cluster B": 196.03
+    "Cluster C": 179.29
+  worst_served_group: "Cluster A"
+  mae_v1_on_check: 213.94 # v1 on the last 30% of later.csv (by date)
+  mae_v2_on_check: 112.52 # v2 on the same rows
+  decision: "promote" # promote or keep
