@@ -94,7 +94,6 @@ for tree in trees:
         version = str(model_info.registered_model_version)
         print(f"[{tree}] Registered {MODEL_NAME} v{version} | MAE: {mae:.4f}")
 
-        # Track the lowest MAE
         if mae < best_mae:
             best_mae = mae
             best_version = version
